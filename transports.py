@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import paramiko
+import json
 
 class UnknownTransport(Exception):
     pass
@@ -8,23 +9,29 @@ class UnknownTransport(Exception):
 class TransportError(Exception):
     pass
 
-def get_transport(transport_name, host, port, login, password):
+def get_transport(transport_name, **kwargs):
     if transport_name == 'ssh':
-        transport = paramiko.
+        with open('config.json', 'r') as file:
+            file_config = json.load(file)
+        file.close
+        config = {'host' : file_config['host'],
+                  'login' : file_config['transports']['SSH']['login'],
+                  'password' : file_config['transports']['SSH']['password'],
+                  'port' : file_config['transports']['SSH']['port']}
+        config.update(kwargs)
+        transport = paramiko.SSHClient()
         transport.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        connect(host, login, password, port)
-        
+        transport = transport.connect(host = config['host'],
+                                      port = config['port'],
+                                      login = config['login'],
+                                      password = config['password'])
         return transport
     else:
         raise UnknownTransport()
 
 class transport_ssh:
-    def __init__(self, host, port, login, password):
-        self.host = host
-        self.port = port
-        self.login = login
-        self.password = password
-        self.client = get.transport('ssh', self.host, self.port, self.login, self.password)
+    def __init__(self):
+        self.client = get.transport('ssh')
 
     def __del__(self):
         self.client.close()
